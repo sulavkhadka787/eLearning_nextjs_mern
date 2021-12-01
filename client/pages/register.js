@@ -1,14 +1,28 @@
-import { useState } from "react";
+import { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { SyncOutlined } from "@ant-design/icons";
 import Link from "next/link";
+import { Context } from "../context";
+import { useRouter } from "next/router";
 
 const Register = () => {
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const router = useRouter();
+
+  //state
+  const {
+    state: { user },
+    dispatch,
+  } = useContext(Context);
+
+  useEffect(() => {
+    if (user !== null) router.push("/");
+  }, [user]);
 
   console.log("TESTING ENV", process.env.NEXT_PUBLIC_API);
 
