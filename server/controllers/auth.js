@@ -2,6 +2,7 @@ import User from "../models/user";
 import { hashPassword, comparePassword } from "../utils/auth";
 import jwt from "jsonwebtoken";
 import AWS from "aws-sdk";
+import { nanoid } from "nanoid";
 
 const awsConfig = {
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -14,31 +15,33 @@ const SES = new AWS.SES(awsConfig);
 
 export const register = async (req, res) => {
   try {
+    // console.log(req.body);
     const { name, email, password } = req.body;
-
+    // validation
     if (!name) return res.status(400).send("Name is required");
     if (!password || password.length < 6) {
       return res
         .status(400)
-        .send("Password is required and should be minimum 6 characters long");
+        .send("Password is required and should be min 6 characters long");
     }
     let userExist = await User.findOne({ email }).exec();
     if (userExist) return res.status(400).send("Email is taken");
 
-    //hash password
+    // hash password
     const hashedPassword = await hashPassword(password);
 
-    //register
+    // register
     const user = new User({
       name,
       email,
       password: hashedPassword,
-    }).save();
-    console.log("saved user", user);
+    });
+    await user.save();
+    // console.log("saved user", user);
     return res.json({ ok: true });
-  } catch (error) {
-    console.log(error);
-    return res.status(400).send("Error.Try again");
+  } catch (err) {
+    console.log(err);
+    return res.status(400).send("Error. Try again.");
   }
 };
 
@@ -127,4 +130,54 @@ export const sendTestEmail = async (req, res) => {
     .catch((err) => {
       console.log(err);
     });
+};
+
+export const forgotPassword = async (req, res) => {
+  try {
+    const { email } = req.body;
+    console.log(email);
+    const shortCode = nanoid(6).toUpperCase();
+    const user = await User.findOneAndUpdate(
+      { email },
+      { passwordResetCode: shortCode }
+    );
+    if (!user) return res.status(400).send("User not found");
+
+    //prepare for email
+    const params = {
+      Source: process.env.EMAIL_FROM,
+      Destination: {
+        ToAddresses: [email],
+      },
+      Message: {
+        Body: {
+          Html: {
+            Charset: "UTF-8",
+            Data: `<html>
+                <h1>Reset Password</h1>
+                <p>Use this code to reset your password</p>
+                <h2 style={{ color: "red" }}>${shortCode}</h2>
+                <i>edemy.com</i>
+              </html>`,
+          },
+        },
+        Subject: {
+          Charset: "UTF-8",
+          Data: "Reset Password",
+        },
+      },
+    };
+
+    const emailSent = SES.sendEmail(params).promise();
+    emailSent
+      .then((data) => {
+        console.log(data);
+        res.json({ ok: true });
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  } catch (err) {
+    console.log(err);
+  }
 };

@@ -78,9 +78,15 @@ const Login = () => {
           </button>
         </form>
         <p className="text-center p-3">
-          Already registered ?{" "}
+          Not registered yet?{" "}
           <Link href="/register">
             <a>Register</a>
+          </Link>
+        </p>
+
+        <p className="text-center">
+          <Link href="/forgot-password">
+            <a className="text-danger">Forgot Password?</a>
           </Link>
         </p>
       </div>
