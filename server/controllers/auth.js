@@ -135,7 +135,7 @@ export const sendTestEmail = async (req, res) => {
 export const forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
-    console.log(email);
+    // console.log(email);
     const shortCode = nanoid(6).toUpperCase();
     const user = await User.findOneAndUpdate(
       { email },
@@ -143,7 +143,7 @@ export const forgotPassword = async (req, res) => {
     );
     if (!user) return res.status(400).send("User not found");
 
-    //prepare for email
+    // prepare for email
     const params = {
       Source: process.env.EMAIL_FROM,
       Destination: {
@@ -153,12 +153,14 @@ export const forgotPassword = async (req, res) => {
         Body: {
           Html: {
             Charset: "UTF-8",
-            Data: `<html>
-                <h1>Reset Password</h1>
-                <p>Use this code to reset your password</p>
-                <h2 style={{ color: "red" }}>${shortCode}</h2>
-                <i>edemy.com</i>
-              </html>`,
+            Data: `
+                <html>
+                  <h1>Reset password</h1>
+                  <p>User this code to reset your password</p>
+                  <h2 style="color:red;">${shortCode}</h2>
+                  <i>edemy.com</i>
+                </html>
+              `,
           },
         },
         Subject: {
@@ -177,6 +179,21 @@ export const forgotPassword = async (req, res) => {
       .catch((err) => {
         console.log(err);
       });
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const resetPassword = async (req, res) => {
+  try {
+    const { email, code, newPassword } = req.body;
+    const hashedPassword = await hashPassword(newPassword);
+
+    const user = User.findOneAndUpdate(
+      { email, passwordResetCode: code },
+      { password: hashedPassword, passwordResetCode: "" }
+    ).exec();
+    res.json({ ok: true });
   } catch (err) {
     console.log(err);
   }
