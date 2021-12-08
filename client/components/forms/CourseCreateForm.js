@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Select, Button } from "antd";
+import { Select, Button, Avatar, Badge } from "antd";
 
 const { Option } = Select;
 
@@ -9,6 +9,9 @@ const CourseCreateForm = ({
   handleChange,
   values,
   setValues,
+  preview,
+  uploadButtonText,
+  handleImageRemove,
 }) => {
   const children = [];
 
@@ -45,7 +48,7 @@ const CourseCreateForm = ({
               style={{ width: "100%" }}
               size="large"
               value={values.paid}
-              onChange={(v) => setValues({ ...values, paid: !values.paid })}
+              onChange={(v) => setValues({ ...values, paid: v, price: 0 })}
             >
               <Option value={true}>Paid</Option>
               <Option value={false}>Free</Option>
@@ -95,6 +98,11 @@ const CourseCreateForm = ({
           </div>
         </div>
       </div>
+      {preview && (
+        <Badge count="X" onClick={handleImageRemove} className="pointer">
+          <Avatar width={200} src={preview} />
+        </Badge>
+      )}
 
       <div className="row">
         <div className="col">
