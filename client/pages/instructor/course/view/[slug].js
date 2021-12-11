@@ -2,12 +2,23 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import InstructorRoute from "../../../../components/routes/InstructorRoute";
 import axios from "axios";
-import { Avatar, Tooltip } from "antd";
-import { EditOutlined, CheckOutlined } from "@ant-design/icons";
+import { Avatar, Tooltip, Button, Modal } from "antd";
+import { EditOutlined, CheckOutlined, UploadOutlined } from "@ant-design/icons";
 import ReactMarkdown from "react-markdown";
+import AddLessonForm from "../../../../components/forms/AddLessonForm";
 
 const CourseView = () => {
   const [course, setCourse] = useState({});
+
+  const [visible, setVisible] = useState(false);
+  const [values, setValues] = useState({
+    title: "",
+    content: "",
+    video: "",
+  });
+
+  const [uploading, setUploading] = useState(false);
+  const [uploadButtonText, setUploadButtonText] = useState("Upload Video");
 
   const router = useRouter();
   const { slug } = router.query;
@@ -19,6 +30,17 @@ const CourseView = () => {
   const loadCourse = async () => {
     const { data } = await axios.get(`/api/course/${slug}`);
     setCourse(data);
+  };
+
+  const handleAddLesson = (e) => {
+    e.preventDefault();
+    console.log(values);
+  };
+
+  const handleVideo = (e) => {
+    const file = e.target.files[0];
+    setUploadButtonText(file.name);
+    console.log("handle video upload");
   };
 
   return (
@@ -58,6 +80,35 @@ const CourseView = () => {
                 <ReactMarkdown children={course.description} />
               </div>
             </div>
+            <div className="row">
+              <Button
+                onClick={() => setVisible(true)}
+                className="col-md-6 offset-md-3 text-center"
+                type="primary"
+                shape="round"
+                icon={<UploadOutlined />}
+                size="large"
+              >
+                Add Lesson
+              </Button>
+            </div>
+            <br />
+            <Modal
+              title="+ Add Lesson"
+              centered
+              visible={visible}
+              onCancel={() => setVisible(false)}
+              footer={null}
+            >
+              <AddLessonForm
+                values={values}
+                setValues={setValues}
+                handleAddLesson={handleAddLesson}
+                uploading={uploading}
+                uploadButtonText={uploadButtonText}
+                handleVideo={handleVideo}
+              />
+            </Modal>
           </div>
         )}
       </div>
