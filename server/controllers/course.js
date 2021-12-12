@@ -1,6 +1,7 @@
 import AWS from "aws-sdk";
 import { nanoid } from "nanoid";
 import Course from "../models/course";
+
 import slugify from "slugify";
 import { readFileSync } from "fs";
 
@@ -47,21 +48,20 @@ export const uploadImage = async (req, res) => {
       res.send(data);
     });
   } catch (err) {
-    console.log("upload -image-error=>>>>", err);
+    console.log(err);
   }
 };
 
 export const removeImage = async (req, res) => {
   try {
     const { image } = req.body;
-
-    //image params
+    // image params
     const params = {
       Bucket: image.Bucket,
       Key: image.Key,
     };
 
-    //send remove request to s3
+    // send remove request to s3
     S3.deleteObject(params, (err, data) => {
       if (err) {
         console.log(err);
@@ -75,11 +75,13 @@ export const removeImage = async (req, res) => {
 };
 
 export const create = async (req, res) => {
+  // console.log("CREATE COURSE", req.body);
+  // return;
   try {
-    const alreadyExists = await Course.findOne({
+    const alreadyExist = await Course.findOne({
       slug: slugify(req.body.name.toLowerCase()),
     });
-    if (alreadyExists) return res.status(400).send("Title is taken");
+    if (alreadyExist) return res.status(400).send("Title is taken");
 
     const course = await new Course({
       slug: slugify(req.body.name),
@@ -90,7 +92,7 @@ export const create = async (req, res) => {
     res.json(course);
   } catch (err) {
     console.log(err);
-    return res.status(400).send("Course create failed. Try again");
+    return res.status(400).send("Course create failed. Try again.");
   }
 };
 
@@ -107,22 +109,26 @@ export const read = async (req, res) => {
 
 export const uploadVideo = async (req, res) => {
   try {
+    // console.log("req.user._id", req.user._id);
+    // console.log("req.params.instructorId", req.params.instructorId);
     if (req.user._id != req.params.instructorId) {
       return res.status(400).send("Unauthorized");
     }
+
     const { video } = req.files;
+    // console.log(video);
+    if (!video) return res.status(400).send("No video");
 
-    if (!video) return res.status(400).send("No Video");
-
-    //video params
+    // video params
     const params = {
-      Bucket: "edemy-bucket787",
+      Bucket: "edemy-bucket",
       Key: `${nanoid()}.${video.type.split("/")[1]}`,
       Body: readFileSync(video.path),
       ACL: "public-read",
       ContentType: video.type,
     };
 
+    // upload to s3
     S3.upload(params, (err, data) => {
       if (err) {
         console.log(err);
@@ -137,21 +143,21 @@ export const uploadVideo = async (req, res) => {
 };
 
 export const removeVideo = async (req, res) => {
-  if (req.user._id != req.params.instructorId) {
-    return res.status(400).send("Unauthorized");
-  }
   try {
+    if (req.user._id != req.params.instructorId) {
+      return res.status(400).send("Unauthorized");
+    }
+
     const { Bucket, Key } = req.body;
-    //console.log(video);
+    // console.log("VIDEO REMOVE =====> ", req.body);
 
-    //if (!video) return res.status(400).send("No Video");
-
-    //video params
+    // video params
     const params = {
       Bucket,
       Key,
     };
 
+    // upload to s3
     S3.deleteObject(params, (err, data) => {
       if (err) {
         console.log(err);
@@ -186,6 +192,27 @@ export const addLesson = async (req, res) => {
     res.json(updated);
   } catch (err) {
     console.log(err);
-    return res.status(400).send("Add Lesson failed");
+    return res.status(400).send("Add lesson failed");
+  }
+};
+
+export const update = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    // console.log(slug);
+    const course = await Course.findOne({ slug }).exec();
+    // console.log("COURSE FOUND => ", course);
+    if (req.user._id != course.instructor) {
+      return res.status(400).send("Unauthorized");
+    }
+
+    const updated = await Course.findOneAndUpdate({ slug }, req.body, {
+      new: true,
+    }).exec();
+
+    res.json(updated);
+  } catch (err) {
+    console.log(err);
+    return res.status(400).send(err.message);
   }
 };
