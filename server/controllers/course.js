@@ -121,7 +121,7 @@ export const uploadVideo = async (req, res) => {
 
     // video params
     const params = {
-      Bucket: "edemy-bucket",
+      Bucket: "edemy-bucket787",
       Key: `${nanoid()}.${video.type.split("/")[1]}`,
       Body: readFileSync(video.path),
       ACL: "public-read",
