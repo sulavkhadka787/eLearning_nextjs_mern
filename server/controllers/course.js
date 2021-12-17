@@ -4,6 +4,7 @@ import Course from "../models/course";
 
 import slugify from "slugify";
 import { readFileSync } from "fs";
+import { captureRejections } from "events";
 
 const awsConfig = {
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
@@ -229,4 +230,33 @@ export const removeLesson = async (req, res) => {
   }).exec();
 
   res.json({ ok: true });
+};
+
+export const updateLesson = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const { _id, title, content, video, free_preview } = req.body;
+    const course = await Course.findOne({ slug }).select("instructor").exec();
+
+    if (course.instructor._id != req.user._id) {
+      return res.status(400).send("Unauthorized");
+    }
+
+    const updated = await Course.updateOne(
+      { "lessons._id": _id },
+      {
+        $set: {
+          "lessons.$.title": title,
+          "lessons.$.content": content,
+          "lessons.$.video": video,
+          "lessons.$.free_preview": free_preview,
+        },
+      },
+      { new: true }
+    ).exec();
+    res.json({ ok: true });
+  } catch (err) {
+    console.log(err);
+    return res.status(400).send("Update lesson failed");
+  }
 };
