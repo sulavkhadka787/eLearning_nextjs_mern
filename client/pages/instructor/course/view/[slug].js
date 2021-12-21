@@ -49,8 +49,9 @@ const CourseView = () => {
         values
       );
       setValues({ ...values, title: "", content: "", video: {} });
-      setVisible(false);
+      setProgress(0);
       setUploadButtonText("Upload Video");
+      setVisible(false);
       setCourse(data);
       toast("Lesson added");
     } catch (err) {
@@ -106,12 +107,32 @@ const CourseView = () => {
     }
   };
 
-  const handlePublish = (e, courseId) => {
-    //
+  const handlePublish = async (e, courseId) => {
+    try {
+      let answer = window.confirm(
+        "Once you publish your course, it will be live in the marketplace for users to enroll"
+      );
+      if (!answer) return;
+      const { data } = await axios.put(`/api/course/publish/${courseId}`);
+      setCourse(data);
+      toast("Congrats! Your course is now live");
+    } catch (err) {
+      toast("Course publish failed! try again");
+    }
   };
 
-  const handleUnPublish = (e, courseId) => {
-    //
+  const handleUnPublish = async (e, courseId) => {
+    try {
+      let answer = window.confirm(
+        "Once you unpublish your course, it will be not available for users to enroll"
+      );
+      if (!answer) return;
+      const { data } = await axios.put(`/api/course/unpublish/${courseId}`);
+      setCourse(data);
+      toast("Your course is unpublished");
+    } catch (err) {
+      toast("Course unpublish failed");
+    }
   };
 
   return (
@@ -152,7 +173,7 @@ const CourseView = () => {
                     ) : course.published ? (
                       <Tooltip title="Unpublish">
                         <CloseOutlined
-                          onClick={(e) => handleUnpublish(e, course._id)}
+                          onClick={(e) => handleUnPublish(e, course._id)}
                           className="h5 pointer text-danger"
                         />
                       </Tooltip>
