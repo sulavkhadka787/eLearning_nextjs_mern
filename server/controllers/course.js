@@ -4,7 +4,6 @@ import Course from "../models/course";
 
 import slugify from "slugify";
 import { readFileSync } from "fs";
-import { captureRejections } from "events";
 
 const awsConfig = {
   accessKeyId: process.env.AWS_ACCESS_KEY_ID,
