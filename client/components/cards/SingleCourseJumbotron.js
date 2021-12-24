@@ -1,7 +1,8 @@
 import SingleCourse from "../../pages/course/[slug]";
 import { currencyFormatter } from "../../utils/helper";
-import { Badge, Modal } from "antd";
+import { Badge, Modal, Button } from "antd";
 import ReactPlayer from "react-player";
+import { LoadingOutlined, SafetyOutlined } from "@ant-design/icons";
 
 const SingleCourseJumbotron = ({
   course,
@@ -9,6 +10,10 @@ const SingleCourseJumbotron = ({
   setShowModal,
   preview,
   setPreview,
+  loading,
+  user,
+  handlePaidEnrollment,
+  handleFreeEnrollment,
 }) => {
   const {
     name,
@@ -71,7 +76,24 @@ const SingleCourseJumbotron = ({
                 />
               </>
             )}
-            <p>show enroll button</p>
+            {loading ? (
+              <div className="d-flex justify-content-center">
+                <LoadingOutlined className="h1 text-danger" />
+              </div>
+            ) : (
+              <Button
+                className="mb-3 mt-3"
+                type="danger"
+                block
+                shape="round"
+                icon={<SafetyOutlined />}
+                size="large"
+                disabled={loading}
+                onClick={paid ? handlePaidEnrollment : handleFreeEnrollment}
+              >
+                {user ? "Enroll" : "Login to Enroll"}
+              </Button>
+            )}
           </div>
         </div>
       </div>
