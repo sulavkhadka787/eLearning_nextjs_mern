@@ -18,4 +18,4 @@ const completedSchema = new mongoose.Schema(
   }
 );
 
-export default mongoose.model("Completed", completedSchema);
+export default mongoose.model("Completed", completedSchema);    

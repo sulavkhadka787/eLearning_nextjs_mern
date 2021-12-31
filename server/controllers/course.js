@@ -442,13 +442,15 @@ export const userCourses = async (req, res) => {
 
 export const markCompleted = async (req, res) => {
   const { courseId, lessonId } = req.body;
-
+  // console.log(courseId, lessonId);
+  // find if user with that course is already created
   const existing = await Completed.findOne({
     user: req.user._id,
     course: courseId,
   }).exec();
 
   if (existing) {
+    // update
     const updated = await Completed.findOneAndUpdate(
       {
         user: req.user._id,
@@ -460,11 +462,43 @@ export const markCompleted = async (req, res) => {
     ).exec();
     res.json({ ok: true });
   } else {
+    // create
     const created = await new Completed({
       user: req.user._id,
       course: courseId,
       lessons: lessonId,
     }).save();
     res.json({ ok: true });
+  }
+};
+
+export const listCompleted = async (req, res) => {
+  try {
+    const list = await Completed.findOne({
+      user: req.user._id,
+      course: req.body.courseId,
+    }).exec();
+    list && res.json(list.lessons);
+  } catch (err) {
+    console.log(err);
+  }
+};
+
+export const markIncomplete = async (req, res) => {
+  try {
+    const { courseId, lessonId } = req.body;
+
+    const updated = await Completed.findOneAndUpdate(
+      {
+        user: req.user._id,
+        course: courseId,
+      },
+      {
+        $pull: { lessons: lessonId },
+      }
+    ).exec();
+    res.json({ ok: true });
+  } catch (err) {
+    console.log(err);
   }
 };
